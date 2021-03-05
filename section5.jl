@@ -3,12 +3,12 @@
 using Markdown
 using InteractiveUtils
 
-"""
+#=
 Package is in my julia dev folder. If it isn't replace the bottom with
 
 include("OpenFOAM.jl")
 using .OpenFOAM, Plots, LaTeXStrings
-"""
+=#
 using Pkg
 Pkg.develop("OpenFOAM")
 using OpenFOAM, Plots, LaTeXStrings
@@ -89,12 +89,21 @@ function integrate(x, y)
 end
 
 """
+Input: structured internal field
+Output: derivative at ỹ = 1
+
+One sided 4th order finite difference
+"""
+function topderivative(x)
+	(-11 .* x[end, 1:end] .+ 18 .* x[end-1, 1:end] .- 9 .* x[end-2, 1:end] .+ 2 .* x[end-3, 1:end]) * N / .6
+end
+"""
 For each folder
 	- take the finite difference at the lid wrt y
 	- integrate it over domain of [0, 1]
 	- create pair of Re, F̃
 """
-pldata = map(x -> x[1] => integrate((1:N)./N,(x[2][end, 1:end] .- x[2][end-1, 1:end]) * N / .1), rawdata)
+pldata = map(x -> x[1] => integrate((1:N)./N,topderivative(x[2])), rawdata)
 
 """
 Get normalized internal field for Re = 10
@@ -104,7 +113,7 @@ ux = filter(x -> x[1] == 10, rawdata)[1][2]
 """
 Take finite difference of ux wrt ỹ
 """
-tau = (ux[end, 1:end] .- ux[end-1, 1:end]) * N / .1
+tau = topderivative(ux)
 
 """
 Plot normalized shear stress vs normalized horizontal distance along lid
