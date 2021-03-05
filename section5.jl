@@ -30,7 +30,10 @@ Removes last character (gets rid of semi-colon)
 Parse as Float
 """
 function nuvalue(x)
-	first(map(y -> parse(Float64, split(strip(y))[end][1:end-1]), filter(startswith("nu"), split(read(joinpath(x, "constant/transportProperties"), String), "\n"))))
+	first(map(y -> parse(Float64, split(strip(y))[end][1:end-1]), 
+				filter(startswith("nu"), 
+				split(read(joinpath(x, "constant/transportProperties"), 
+							String), "\n"))))
 end
 
 """
@@ -62,7 +65,10 @@ Output: normalized structured internal field values
 ỹ(x) = reshape(map(x -> x[1] / .1, x), (N, N))'
 
 """
-Base directory used in this case. Note that only the folders starting with "cavitynu" were used in the figures seen in the paper. Other folders in "folder" will cause different figures to generate.
+Base directory used in this case. Note that only the 
+folders starting with "cavitynu" were used in the 
+figures seen in the paper. Other folders in "folder" 
+will cause different figures to generate.
 """
 folder = joinpath(dirname(@__FILE__), "foamfiles")
 
@@ -76,7 +82,9 @@ For each folder
 	- Get Reynolds number
 	- Emit pair Re, ỹ
 """
-rawdata = map(y -> reynolds(y) => ỹ(forcevalue(y)), map(x -> joinpath(folder, x), readdir(folder)))
+rawdata = map(y -> reynolds(y) => ỹ(forcevalue(y)), 
+				map(x -> joinpath(folder, x), 
+						readdir(folder)))
 
 """
 Input: x and y values
@@ -85,7 +93,8 @@ Output: integration of y over the domain of x
 Perform trapezoidal integration
 """
 function integrate(x, y)
-	sum(map(i -> (y[i - 1] + y[i]) * (x[i] - x[i - 1]) / 2, 2:length(x)))
+	sum(map(i -> (y[i - 1] + y[i]) * (x[i] - x[i - 1]) 
+					/ 2, 2:length(x)))
 end
 
 """
@@ -95,7 +104,8 @@ Output: derivative at ỹ = 1
 One sided 4th order finite difference
 """
 function topderivative(x)
-	(-11 .* x[end, 1:end] .+ 18 .* x[end-1, 1:end] .- 9 .* x[end-2, 1:end] .+ 2 .* x[end-3, 1:end]) * N / .6
+	(-11 .* x[end, 1:end] .+ 18 .* x[end-1, 1:end] .- 9 .* 
+		x[end-2, 1:end] .+ 2 .* x[end-3, 1:end]) * N / .6
 end
 """
 For each folder
@@ -103,7 +113,8 @@ For each folder
 	- integrate it over domain of [0, 1]
 	- create pair of Re, F̃
 """
-pldata = map(x -> x[1] => integrate((1:N)./N,topderivative(x[2])), rawdata)
+pldata = map(x -> x[1] => integrate((1:N)./N,
+						topderivative(x[2])), rawdata)
 
 """
 Get normalized internal field for Re = 10
@@ -116,13 +127,19 @@ Take finite difference of ux wrt ỹ
 tau = topderivative(ux)
 
 """
-Plot normalized shear stress vs normalized horizontal distance along lid
+Plot normalized shear stress vs normalized horizontal 
+distance along lid
 """
-tout = plot(range(0, 1, length=length(tau)), tau, xlabel=L"\widetilde{x}", ylabel=L"\widetilde{\tau}", legend=nothing, title=L"\textrm{Shear Stress on Lid } (Re = 10)")
+tout = plot(range(0, 1, length=length(tau)), tau, 
+	xlabel=L"\widetilde{x}", ylabel=L"\widetilde{\tau}", 
+	legend=nothing, 
+	title=L"\textrm{Shear Stress on Lid } (Re = 10)")
 savefig(tout, "/home/watson/tau.png")
 
 """
 Plot Normalized Force vs Reynolds number
 """
-lf = scatter(map(x -> x[1], pldata), map(x -> x[2], pldata), xlabel=L"Re", ylabel=L"\widetilde{F}", legend=nothing, title=L"\textrm{Lid Force}")
+lf = scatter(map(x -> x[1], pldata), map(x -> x[2], pldata), 
+	xlabel=L"Re", ylabel=L"\widetilde{F}", legend=nothing, 
+	title=L"\textrm{Lid Force}")
 savefig(lf, "/home/watson/lf.png")
